@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package pb;
+
+enum MSG {
+    M_CreatePlayer = 0;
+    M_BroadcastChat = 1;
+}
+
+message CreatePlayer {
+    string name = 1;
+}
+
+message BroadcastChat {
+    uint32 uid = 1;
+    string chatdata = 2;
+}

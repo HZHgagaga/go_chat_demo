@@ -67,13 +67,16 @@ func (c *Connection) ReadLoop() {
 			}
 			c.Server.ThreadPool.AddTask(
 				func() {
-					handle, err := c.Server.GetMsgHandle()
-					if err != nil {
-						fmt.Println("Get MsgHandle err: ", err)
-						return
-					}
+					switch msg.GetID() {
+					default:
+						handle, err := c.Server.GetMsgHandle()
+						if err != nil {
+							fmt.Println("Get MsgHandle err: ", err)
+							return
+						}
 
-					handle(c, msg)
+						handle(c, msg)
+					}
 				},
 			)
 		}

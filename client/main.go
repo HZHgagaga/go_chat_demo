@@ -48,17 +48,35 @@ func Decode(m *Message) []byte {
 	return bbuf.Bytes()
 }
 
+func EnterChat(conn net.Conn) {
+	fmt.Print("Please input your name: ")
+	buf := make([]byte, 256)
+
+	fmt.Scanln(&buf)
+	msg := &Message{}
+	msg.Id = uint32(0)
+	msg.Len = uint32(binary.Size(buf))
+	msg.Data = buf
+	sendMsg := Decode(msg)
+	_, err := conn.Write(sendMsg)
+	if err != nil {
+		fmt.Println("Write error", err)
+	}
+}
+
 func main() {
 	fmt.Println("Client start test...")
 	conn, err := net.Dial("tcp4", "127.0.0.1:16666")
 	if err != nil {
 		fmt.Println("Dial error: ", err)
 		return
+	} else {
+		fmt.Println("Connect server succeed")
 	}
 
 	defer conn.Close()
 	go ReadLoop(conn)
-
+	EnterChat(conn)
 	buf := make([]byte, 256)
 	for {
 		fmt.Scanln(&buf)
