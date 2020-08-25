@@ -65,7 +65,7 @@ func (c *Connection) ReadLoop() {
 				}
 				msg.Data = dataBuf
 			}
-			c.Server.ThreadPool.AddTask(
+			c.Server.WorkThread.AddTask(
 				func() {
 					switch msg.GetID() {
 					default:

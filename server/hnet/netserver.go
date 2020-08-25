@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"hzhgagaga/hiface"
 	"net"
-	"runtime"
 )
 
 type MsgHandle = func(hiface.IConnection, hiface.IMessage)
@@ -14,7 +13,7 @@ type Server struct {
 	Name       string
 	IP         string
 	Port       int
-	ThreadPool *ThreadPool
+	WorkThread *WorkThread
 	MsgHandle  MsgHandle
 }
 
@@ -23,7 +22,7 @@ func NewServer(name string, ip string, port int) hiface.IServer {
 		Name:       name,
 		IP:         ip,
 		Port:       port,
-		ThreadPool: NewThreadPool(),
+		WorkThread: NewWorkThread(),
 		MsgHandle:  nil,
 	}
 
@@ -49,7 +48,7 @@ func (s *Server) Start() {
 	fmt.Println("ListenTCP succeeded...")
 	var connID uint32 = 1
 	proto := CreateProto()
-	s.ThreadPool.Start(runtime.NumCPU())
+	s.WorkThread.Start()
 
 	for {
 		conn, err := listen.AcceptTCP()

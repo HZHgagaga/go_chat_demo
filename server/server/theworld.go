@@ -59,9 +59,6 @@ func (w *TheWorld) InitProtocol() {
 			if num, ok := pb.MSG_value[protocolName]; ok {
 				w.HandleMap[uint32(num)] = v.Method(i)
 				fmt.Println("Init protocol func :", t.Method(i).Name)
-				//plr := CreatePlayer("test", 1)
-				//msg := NewMessage(nil)
-				//w.HandleMap[uint32(num)].Call(getValues(plr, msg))
 			}
 		}
 	}
@@ -97,8 +94,6 @@ func MsgHandle(conn hiface.IConnection, msg hiface.IMessage) {
 	}
 	plr, err := theWorld.GetPlayer(conn)
 	if err != nil {
-		//	fmt.Println("GetPlayer nil: ", err)
-		//	return
 		theWorld.CreateAndAddPlayer(conn, message)
 	}
 
