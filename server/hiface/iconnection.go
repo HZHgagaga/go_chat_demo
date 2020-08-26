@@ -9,5 +9,5 @@ type IConnection interface {
 	Start()
 	GetTCPConn() *net.TCPConn
 	Stop()
-	SendMessage(msg []byte)
+	SendMessage(msg IMessage)
 }

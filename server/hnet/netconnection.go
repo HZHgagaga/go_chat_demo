@@ -12,7 +12,7 @@ type Connection struct {
 	ConnID   uint32
 	Conn     *net.TCPConn
 	proto    *Proto
-	SendChan chan []byte
+	SendChan chan hiface.IMessage
 }
 
 func NewConnection(uid uint32, conn *net.TCPConn, server *Server, pro *Proto) hiface.IConnection {
@@ -21,7 +21,7 @@ func NewConnection(uid uint32, conn *net.TCPConn, server *Server, pro *Proto) hi
 		ConnID:   uid,
 		Conn:     conn,
 		proto:    pro,
-		SendChan: make(chan []byte, 5000),
+		SendChan: make(chan hiface.IMessage, 5000),
 	}
 
 	return c
@@ -33,10 +33,12 @@ func (c *Connection) GetConnID() uint32 {
 
 func (c *Connection) WriteLoop() {
 	go func() {
+		defer c.Stop()
 		for {
 			select {
 			case msg := <-c.SendChan:
-				c.Conn.Write(msg)
+				data := c.proto.Encode(msg)
+				c.Conn.Write(data)
 			}
 		}
 	}()
@@ -54,6 +56,7 @@ func (c *Connection) ReadLoop() {
 
 			msg, err := c.proto.Decode(buf)
 			if err != nil {
+				fmt.Println("proto.Decode err:", err)
 				return
 			}
 
@@ -63,7 +66,7 @@ func (c *Connection) ReadLoop() {
 					fmt.Println(c.ConnID, "read err: ", err)
 					return
 				}
-				msg.Data = dataBuf
+				msg.SetData(dataBuf)
 			}
 			c.Server.WorkThread.AddTask(
 				func() {
@@ -74,7 +77,6 @@ func (c *Connection) ReadLoop() {
 							fmt.Println("Get MsgHandle err: ", err)
 							return
 						}
-
 						handle(c, msg)
 					}
 				},
@@ -96,6 +98,6 @@ func (c *Connection) Stop() {
 	c.Conn.Close()
 }
 
-func (c *Connection) SendMessage(msg []byte) {
+func (c *Connection) SendMessage(msg hiface.IMessage) {
 	c.SendChan <- msg
 }

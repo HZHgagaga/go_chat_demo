@@ -28,19 +28,25 @@ const _ = proto.ProtoPackageIsVersion4
 type MSG int32
 
 const (
-	MSG_M_CreatePlayer  MSG = 0
-	MSG_M_BroadcastChat MSG = 1
+	MSG_M_CMCreatePlayer  MSG = 0
+	MSG_M_SMCreatePlayer  MSG = 1
+	MSG_M_CMBroadcastChat MSG = 2
+	MSG_M_SMBroadcastChat MSG = 3
 )
 
 // Enum value maps for MSG.
 var (
 	MSG_name = map[int32]string{
-		0: "M_CreatePlayer",
-		1: "M_BroadcastChat",
+		0: "M_CMCreatePlayer",
+		1: "M_SMCreatePlayer",
+		2: "M_CMBroadcastChat",
+		3: "M_SMBroadcastChat",
 	}
 	MSG_value = map[string]int32{
-		"M_CreatePlayer":  0,
-		"M_BroadcastChat": 1,
+		"M_CMCreatePlayer":  0,
+		"M_SMCreatePlayer":  1,
+		"M_CMBroadcastChat": 2,
+		"M_SMBroadcastChat": 3,
 	}
 )
 
@@ -71,7 +77,7 @@ func (MSG) EnumDescriptor() ([]byte, []int) {
 	return file_chat_proto_rawDescGZIP(), []int{0}
 }
 
-type CreatePlayer struct {
+type CMCreatePlayer struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -79,8 +85,8 @@ type CreatePlayer struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (x *CreatePlayer) Reset() {
-	*x = CreatePlayer{}
+func (x *CMCreatePlayer) Reset() {
+	*x = CMCreatePlayer{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_chat_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -88,13 +94,13 @@ func (x *CreatePlayer) Reset() {
 	}
 }
 
-func (x *CreatePlayer) String() string {
+func (x *CMCreatePlayer) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreatePlayer) ProtoMessage() {}
+func (*CMCreatePlayer) ProtoMessage() {}
 
-func (x *CreatePlayer) ProtoReflect() protoreflect.Message {
+func (x *CMCreatePlayer) ProtoReflect() protoreflect.Message {
 	mi := &file_chat_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -106,29 +112,26 @@ func (x *CreatePlayer) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreatePlayer.ProtoReflect.Descriptor instead.
-func (*CreatePlayer) Descriptor() ([]byte, []int) {
+// Deprecated: Use CMCreatePlayer.ProtoReflect.Descriptor instead.
+func (*CMCreatePlayer) Descriptor() ([]byte, []int) {
 	return file_chat_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *CreatePlayer) GetName() string {
+func (x *CMCreatePlayer) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-type BroadcastChat struct {
+type SMCreatePlayer struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Uid      uint32 `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
-	Chatdata string `protobuf:"bytes,2,opt,name=chatdata,proto3" json:"chatdata,omitempty"`
 }
 
-func (x *BroadcastChat) Reset() {
-	*x = BroadcastChat{}
+func (x *SMCreatePlayer) Reset() {
+	*x = SMCreatePlayer{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_chat_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -136,13 +139,13 @@ func (x *BroadcastChat) Reset() {
 	}
 }
 
-func (x *BroadcastChat) String() string {
+func (x *SMCreatePlayer) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*BroadcastChat) ProtoMessage() {}
+func (*SMCreatePlayer) ProtoMessage() {}
 
-func (x *BroadcastChat) ProtoReflect() protoreflect.Message {
+func (x *SMCreatePlayer) ProtoReflect() protoreflect.Message {
 	mi := &file_chat_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -154,19 +157,123 @@ func (x *BroadcastChat) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use BroadcastChat.ProtoReflect.Descriptor instead.
-func (*BroadcastChat) Descriptor() ([]byte, []int) {
+// Deprecated: Use SMCreatePlayer.ProtoReflect.Descriptor instead.
+func (*SMCreatePlayer) Descriptor() ([]byte, []int) {
 	return file_chat_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *BroadcastChat) GetUid() uint32 {
-	if x != nil {
-		return x.Uid
-	}
-	return 0
+type CSBroadcastChat struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name     string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Chatdata string `protobuf:"bytes,2,opt,name=chatdata,proto3" json:"chatdata,omitempty"`
 }
 
-func (x *BroadcastChat) GetChatdata() string {
+func (x *CSBroadcastChat) Reset() {
+	*x = CSBroadcastChat{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_chat_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CSBroadcastChat) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CSBroadcastChat) ProtoMessage() {}
+
+func (x *CSBroadcastChat) ProtoReflect() protoreflect.Message {
+	mi := &file_chat_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CSBroadcastChat.ProtoReflect.Descriptor instead.
+func (*CSBroadcastChat) Descriptor() ([]byte, []int) {
+	return file_chat_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CSBroadcastChat) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CSBroadcastChat) GetChatdata() string {
+	if x != nil {
+		return x.Chatdata
+	}
+	return ""
+}
+
+type SMBroadcastChat struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Time     string `protobuf:"bytes,1,opt,name=time,proto3" json:"time,omitempty"`
+	Name     string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Chatdata string `protobuf:"bytes,3,opt,name=chatdata,proto3" json:"chatdata,omitempty"`
+}
+
+func (x *SMBroadcastChat) Reset() {
+	*x = SMBroadcastChat{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_chat_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SMBroadcastChat) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SMBroadcastChat) ProtoMessage() {}
+
+func (x *SMBroadcastChat) ProtoReflect() protoreflect.Message {
+	mi := &file_chat_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SMBroadcastChat.ProtoReflect.Descriptor instead.
+func (*SMBroadcastChat) Descriptor() ([]byte, []int) {
+	return file_chat_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *SMBroadcastChat) GetTime() string {
+	if x != nil {
+		return x.Time
+	}
+	return ""
+}
+
+func (x *SMBroadcastChat) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *SMBroadcastChat) GetChatdata() string {
 	if x != nil {
 		return x.Chatdata
 	}
@@ -177,16 +284,26 @@ var File_chat_proto protoreflect.FileDescriptor
 
 var file_chat_proto_rawDesc = []byte{
 	0x0a, 0x0a, 0x63, 0x68, 0x61, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x02, 0x70, 0x62,
-	0x22, 0x22, 0x0a, 0x0c, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
-	0x6e, 0x61, 0x6d, 0x65, 0x22, 0x3d, 0x0a, 0x0d, 0x42, 0x72, 0x6f, 0x61, 0x64, 0x63, 0x61, 0x73,
-	0x74, 0x43, 0x68, 0x61, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0d, 0x52, 0x03, 0x75, 0x69, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x68, 0x61, 0x74, 0x64,
-	0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x63, 0x68, 0x61, 0x74, 0x64,
-	0x61, 0x74, 0x61, 0x2a, 0x2e, 0x0a, 0x03, 0x4d, 0x53, 0x47, 0x12, 0x12, 0x0a, 0x0e, 0x4d, 0x5f,
-	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x10, 0x00, 0x12, 0x13,
-	0x0a, 0x0f, 0x4d, 0x5f, 0x42, 0x72, 0x6f, 0x61, 0x64, 0x63, 0x61, 0x73, 0x74, 0x43, 0x68, 0x61,
-	0x74, 0x10, 0x01, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x24, 0x0a, 0x0e, 0x43, 0x4d, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x10, 0x0a, 0x0e, 0x53, 0x4d, 0x43, 0x72, 0x65, 0x61,
+	0x74, 0x65, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x22, 0x41, 0x0a, 0x0f, 0x43, 0x53, 0x42, 0x72,
+	0x6f, 0x61, 0x64, 0x63, 0x61, 0x73, 0x74, 0x43, 0x68, 0x61, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x6e,
+	0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12,
+	0x1a, 0x0a, 0x08, 0x63, 0x68, 0x61, 0x74, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x08, 0x63, 0x68, 0x61, 0x74, 0x64, 0x61, 0x74, 0x61, 0x22, 0x55, 0x0a, 0x0f, 0x53,
+	0x4d, 0x42, 0x72, 0x6f, 0x61, 0x64, 0x63, 0x61, 0x73, 0x74, 0x43, 0x68, 0x61, 0x74, 0x12, 0x12,
+	0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x69,
+	0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x68, 0x61, 0x74, 0x64, 0x61,
+	0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x63, 0x68, 0x61, 0x74, 0x64, 0x61,
+	0x74, 0x61, 0x2a, 0x5f, 0x0a, 0x03, 0x4d, 0x53, 0x47, 0x12, 0x14, 0x0a, 0x10, 0x4d, 0x5f, 0x43,
+	0x4d, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x10, 0x00, 0x12,
+	0x14, 0x0a, 0x10, 0x4d, 0x5f, 0x53, 0x4d, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x10, 0x01, 0x12, 0x15, 0x0a, 0x11, 0x4d, 0x5f, 0x43, 0x4d, 0x42, 0x72, 0x6f,
+	0x61, 0x64, 0x63, 0x61, 0x73, 0x74, 0x43, 0x68, 0x61, 0x74, 0x10, 0x02, 0x12, 0x15, 0x0a, 0x11,
+	0x4d, 0x5f, 0x53, 0x4d, 0x42, 0x72, 0x6f, 0x61, 0x64, 0x63, 0x61, 0x73, 0x74, 0x43, 0x68, 0x61,
+	0x74, 0x10, 0x03, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -202,11 +319,13 @@ func file_chat_proto_rawDescGZIP() []byte {
 }
 
 var file_chat_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_chat_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_chat_proto_goTypes = []interface{}{
-	(MSG)(0),              // 0: pb.MSG
-	(*CreatePlayer)(nil),  // 1: pb.CreatePlayer
-	(*BroadcastChat)(nil), // 2: pb.BroadcastChat
+	(MSG)(0),                // 0: pb.MSG
+	(*CMCreatePlayer)(nil),  // 1: pb.CMCreatePlayer
+	(*SMCreatePlayer)(nil),  // 2: pb.SMCreatePlayer
+	(*CSBroadcastChat)(nil), // 3: pb.CSBroadcastChat
+	(*SMBroadcastChat)(nil), // 4: pb.SMBroadcastChat
 }
 var file_chat_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -223,7 +342,7 @@ func file_chat_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_chat_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreatePlayer); i {
+			switch v := v.(*CMCreatePlayer); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -235,7 +354,31 @@ func file_chat_proto_init() {
 			}
 		}
 		file_chat_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BroadcastChat); i {
+			switch v := v.(*SMCreatePlayer); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_chat_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CSBroadcastChat); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_chat_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SMBroadcastChat); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -253,7 +396,7 @@ func file_chat_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_chat_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

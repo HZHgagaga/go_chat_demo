@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"hzhgagaga/hiface"
 )
 
 type MessageHead struct {
@@ -28,6 +29,10 @@ func (m *Message) GetData() []byte {
 	return m.Data
 }
 
+func (m *Message) SetData(data []byte) {
+	m.Data = data
+}
+
 type Proto struct {
 }
 
@@ -39,12 +44,24 @@ func (p *Proto) GetMsgHeadLen() uint32 {
 	return uint32(binary.Size(MessageHead{}))
 }
 
-func (p *Proto) Encode(m *Message) []byte {
-	data := bytes.NewBuffer([]byte{})
-	return data.Bytes()
+func (p *Proto) Encode(m hiface.IMessage) []byte {
+	bbuf := bytes.NewBuffer([]byte{})
+	if err := binary.Write(bbuf, binary.LittleEndian, m.GetID()); err != nil {
+		fmt.Println("binary.Read id err: ", err)
+	}
+
+	if err := binary.Write(bbuf, binary.LittleEndian, m.GetLen()); err != nil {
+		fmt.Println("binary.Read len err: ", err)
+	}
+
+	if err := binary.Write(bbuf, binary.LittleEndian, m.GetData()); err != nil {
+		fmt.Println("binary.Read data err: ", err)
+	}
+
+	return bbuf.Bytes()
 }
 
-func (p *Proto) Decode(buf []byte) (*Message, error) {
+func (p *Proto) Decode(buf []byte) (hiface.IMessage, error) {
 	bbuf := bytes.NewBuffer(buf)
 	m := &Message{}
 	if err := binary.Read(bbuf, binary.LittleEndian, &m.Id); err != nil {

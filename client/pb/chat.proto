@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package pb;
+
+enum MSG {
+    M_CMCreatePlayer = 0;
+    M_SMCreatePlayer = 1;
+    M_CMBroadcastChat = 2;
+    M_SMBroadcastChat = 3;
+}
+
+message CMCreatePlayer {
+    string name = 1;
+}
+
+message SMCreatePlayer {
+}
+
+message CSBroadcastChat {
+    string name = 1;
+    string chatdata = 2;
+}
+
+message SMBroadcastChat {
+    string time = 1;
+    string name = 2;
+    string chatdata = 3;
+}

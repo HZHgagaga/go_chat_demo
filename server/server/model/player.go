@@ -1,7 +1,7 @@
 package model
 
 import (
-	"hzhgagaga/server/core"
+	"hzhgagaga/hiface"
 	"hzhgagaga/server/siface"
 )
 
@@ -11,10 +11,9 @@ type Player struct {
 	Uid      uint32
 }
 
-func CreatePlayer(name string, uid uint32, world siface.ITheWorld) *Player {
+func CreatePlayer(uid uint32, world siface.ITheWorld) *Player {
 	return &Player{
 		theWorld: world,
-		Name:     name,
 		Uid:      uid,
 	}
 }
@@ -27,10 +26,14 @@ func (p *Player) GetUid() uint32 {
 	return p.Uid
 }
 
+func (p *Player) SetName(name string) {
+	p.Name = name
+}
+
 func (p *Player) GetTheWorld() siface.ITheWorld {
 	return p.theWorld
 }
 
-func (p *Player) SendMessage(msg *core.Message) {
-	p.theWorld.Send(p.GetUid(), msg.Data)
+func (p *Player) SendMessage(msg hiface.IMessage) {
+	p.theWorld.Send(p.GetUid(), msg)
 }
