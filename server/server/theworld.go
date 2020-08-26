@@ -4,17 +4,23 @@ import (
 	"errors"
 	"fmt"
 	"hzhgagaga/hiface"
+	"hzhgagaga/hnet"
+	"hzhgagaga/server/core"
+	"hzhgagaga/server/model"
+	"hzhgagaga/server/msgwork"
 	"hzhgagaga/server/pb"
 	"reflect"
+	"runtime"
 	"strconv"
 	"sync"
 )
 
 type TheWorld struct {
-	Users            map[uint32]*Player
+	Users            map[uint32]*model.Player
 	UsersConns       map[uint32]hiface.IConnection
 	MessageStructMap []interface{}
 	HandleMap        map[uint32]reflect.Value
+	SyncPool         *hnet.AsyncThreadPool
 }
 
 var theWorld *TheWorld
@@ -23,14 +29,17 @@ var once sync.Once
 func GetTheWorld() *TheWorld {
 	once.Do(func() {
 		theWorld = &TheWorld{
-			Users:      make(map[uint32]*Player),
+			Users:      make(map[uint32]*model.Player),
 			UsersConns: make(map[uint32]hiface.IConnection),
 			HandleMap:  make(map[uint32]reflect.Value),
+			SyncPool:   hnet.NewAsyncThreadPool(runtime.NumCPU()),
 		}
 
-		theWorld.AddMsgStruct(&ChatMessage{})
-		theWorld.AddMsgStruct(&PlayerMessage{})
+		theWorld.AddMsgStruct(&msgwork.ChatMessage{})
+		theWorld.AddMsgStruct(&msgwork.PlayerMessage{})
+
 		theWorld.InitProtocol()
+		theWorld.SyncPool.Start()
 	})
 
 	return theWorld
@@ -64,7 +73,7 @@ func (w *TheWorld) InitProtocol() {
 	}
 }
 
-func (w *TheWorld) CallProtocolFunc(id uint32, plr *Player, msg *Message) {
+func (w *TheWorld) CallProtocolFunc(id uint32, plr *model.Player, msg *core.Message) {
 	if handle, ok := w.HandleMap[id]; ok {
 		handle.Call(getValues(plr, msg))
 	} else {
@@ -72,14 +81,15 @@ func (w *TheWorld) CallProtocolFunc(id uint32, plr *Player, msg *Message) {
 	}
 }
 
-func (w *TheWorld) CreateAndAddPlayer(conn hiface.IConnection, msg *Message) {
-	newPlayer := CreatePlayer(string(msg.Data), conn.GetConnID())
+func (w *TheWorld) CreateAndAddPlayer(conn hiface.IConnection, msg *core.Message) {
+	theWorld := GetTheWorld()
+	newPlayer := model.CreatePlayer(string(msg.Data), conn.GetConnID(), theWorld)
 	fmt.Println("----------TheWorld---------AddPlayer")
 	w.Users[newPlayer.GetUid()] = newPlayer
 	w.UsersConns[newPlayer.GetUid()] = conn
 }
 
-func (w *TheWorld) GetPlayer(conn hiface.IConnection) (*Player, error) {
+func (w *TheWorld) GetPlayer(conn hiface.IConnection) (*model.Player, error) {
 	if plr, ok := w.Users[conn.GetConnID()]; ok {
 		return plr, nil
 	}
@@ -89,7 +99,7 @@ func (w *TheWorld) GetPlayer(conn hiface.IConnection) (*Player, error) {
 func MsgHandle(conn hiface.IConnection, msg hiface.IMessage) {
 	theWorld := GetTheWorld()
 	msgID := msg.GetID()
-	message := &Message{
+	message := &core.Message{
 		Data: msg.GetData(),
 	}
 	plr, err := theWorld.GetPlayer(conn)
@@ -109,7 +119,7 @@ func (w *TheWorld) Send(uid uint32, data []byte) {
 	conn.SendMessage(data)
 }
 
-func (w *TheWorld) Broadcast(msg *Message) {
+func (w *TheWorld) Broadcast(msg *core.Message) {
 	for _, player := range theWorld.Users {
 		fmt.Println(msg.Data)
 		w.Send(player.GetUid(), msg.Data)
