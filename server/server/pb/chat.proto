@@ -7,6 +7,8 @@ enum MSG {
     M_SMCreatePlayer = 1;
     M_CMBroadcastChat = 2;
     M_SMBroadcastChat = 3;
+    M_CMHistoryChat = 4;
+    M_SMHistoryChat = 5;
 }
 
 message CMCreatePlayer {
@@ -16,13 +18,21 @@ message CMCreatePlayer {
 message SMCreatePlayer {
 }
 
-message CSBroadcastChat {
+message CMBroadcastChat {
     string name = 1;
     string chatdata = 2;
 }
 
 message SMBroadcastChat {
-    string time = 1;
-    string name = 2;
-    string chatdata = 3;
+    uint64 id = 1;
+    string time = 2;
+    string name = 3;
+    string chatdata = 4;
+}
+
+message CMHistoryChat {
+}
+
+message SMHistoryChat {
+    repeated SMBroadcastChat msg = 1;
 }

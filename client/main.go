@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sort"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -38,7 +39,6 @@ func (m *Message) SetData(data []byte) {
 }
 
 var My_name string
-var EnterChan chan bool = make(chan bool)
 
 func Decode(buf []byte) (*Message, error) {
 	bbuf := bytes.NewBuffer(buf)
@@ -73,6 +73,12 @@ func Encode(m *Message) []byte {
 	return bbuf.Bytes()
 }
 
+type msgs []*pb.SMBroadcastChat
+
+func (s msgs) Len() int           { return len(s) }
+func (s msgs) Less(i, j int) bool { return s[i].GetId() < s[j].GetId() }
+func (s msgs) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+
 func ReadLoop(conn net.Conn) {
 	defer conn.Close()
 	for {
@@ -97,7 +103,6 @@ func ReadLoop(conn net.Conn) {
 		switch int32(msg.GetID()) {
 		case pb.MSG_value["M_SMCreatePlayer"]:
 			fmt.Println("CreatePlayer OK!")
-			EnterChan <- true
 		case pb.MSG_value["M_SMBroadcastChat"]:
 			chat := &pb.SMBroadcastChat{}
 			if err := proto.Unmarshal(dataBuf, chat); err != nil {
@@ -105,6 +110,19 @@ func ReadLoop(conn net.Conn) {
 				break
 			}
 			fmt.Println(chat.GetTime(), chat.GetName(), "say:", chat.GetChatdata())
+		case pb.MSG_value["M_SMHistoryChat"]:
+			chat := &pb.SMHistoryChat{}
+			if err := proto.Unmarshal(dataBuf, chat); err != nil {
+				fmt.Println("proto.Unmarshal err: ", err)
+				break
+			}
+
+			sort.Stable(msgs(chat.Msg))
+			fmt.Println("[======================history=======================]")
+			for _, msg := range chat.GetMsg() {
+				fmt.Println(msg.GetTime(), msg.GetName(), "say:", msg.GetChatdata())
+			}
+			fmt.Println("[========================end=========================]")
 		}
 	}
 }
@@ -115,7 +133,7 @@ func WriteLoop(conn net.Conn) {
 		fmt.Scanln(&buf)
 		msg := &Message{}
 		msg.Id = uint32(pb.MSG_value["M_CMBroadcastChat"])
-		chat := &pb.CSBroadcastChat{}
+		chat := &pb.CMBroadcastChat{}
 		chat.Name = My_name
 		chat.Chatdata = string(buf)
 		data, err := proto.Marshal(chat)
@@ -134,6 +152,49 @@ func WriteLoop(conn net.Conn) {
 	}
 }
 
+func CreatePlayer(conn net.Conn) {
+	buf := make([]byte, 256)
+	fmt.Print("Please input your name:")
+
+	fmt.Scanln(&buf)
+	msg := &Message{}
+	msg.Id = uint32(pb.MSG_value["M_CMCreatePlayer"])
+	cdata := &pb.CMCreatePlayer{}
+	cdata.Name = string(buf)
+	data, err := proto.Marshal(cdata)
+	if err != nil {
+		panic("proto.Marshal err:" + err.Error())
+
+	}
+
+	msg.Len = uint32(binary.Size(data))
+	msg.Data = data
+	sendMsg := Encode(msg)
+	_, err = conn.Write(sendMsg)
+	if err != nil {
+		panic("Write err:" + err.Error())
+	}
+}
+
+func GetHistoryChat(conn net.Conn) {
+	msg := &Message{}
+	msg.Id = uint32(pb.MSG_value["M_CMHistoryChat"])
+	hdata := &pb.CMHistoryChat{}
+	data, err := proto.Marshal(hdata)
+	if err != nil {
+		panic("proto.Marshal err:" + err.Error())
+
+	}
+
+	msg.Len = uint32(binary.Size(data))
+	msg.Data = data
+	sendMsg := Encode(msg)
+	_, err = conn.Write(sendMsg)
+	if err != nil {
+		panic("Write err:" + err.Error())
+	}
+}
+
 func main() {
 	fmt.Println("Client start test...")
 	conn, err := net.Dial("tcp4", "127.0.0.1:16666")
@@ -146,33 +207,8 @@ func main() {
 
 	defer conn.Close()
 	go ReadLoop(conn)
-
-	buf := make([]byte, 256)
-	fmt.Print("Please input your name:")
-
-	fmt.Scanln(&buf)
-	msg := &Message{}
-	msg.Id = uint32(pb.MSG_value["M_CMCreatePlayer"])
-	cdata := &pb.CMCreatePlayer{}
-	cdata.Name = string(buf)
-	data, err := proto.Marshal(cdata)
-	if err != nil {
-		fmt.Println("proto.Marshal err: ", err)
-		return
-	}
-
-	msg.Len = uint32(binary.Size(data))
-	msg.Data = data
-	sendMsg := Encode(msg)
-	_, err = conn.Write(sendMsg)
-	if err != nil {
-		fmt.Println("Write error", err)
-		return
-	}
-	select {
-	case <-EnterChan:
-	}
-
+	CreatePlayer(conn)
+	GetHistoryChat(conn)
 	go WriteLoop(conn)
 	select {}
 }
