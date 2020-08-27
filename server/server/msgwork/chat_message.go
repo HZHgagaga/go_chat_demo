@@ -13,6 +13,7 @@ import (
 type ChatMessage struct {
 }
 
+//CMHistoryChat协议的包将进入该函数进行业务处理
 func (c *ChatMessage) OnCMHistoryChat(role siface.IRole, msg *core.Message) {
 	theWorld := role.GetTheWorld()
 	theWorld.GetAsyncPool().AsyncRun(
@@ -30,6 +31,7 @@ func (c *ChatMessage) OnCMHistoryChat(role siface.IRole, msg *core.Message) {
 				fmt.Println("proto.Marshal err:", err)
 			}
 
+			//通过发送的协议名封包
 			req, err := theWorld.GetProto().Encode("SMHistoryChat", chatArrData)
 			if err != nil {
 				fmt.Println("Encode err:", err)
@@ -39,6 +41,7 @@ func (c *ChatMessage) OnCMHistoryChat(role siface.IRole, msg *core.Message) {
 	)
 }
 
+//CMBroadcastChat协议的包进这里
 func (c *ChatMessage) OnCMBroadcastChat(role siface.IRole, msg *core.Message) {
 	chat := &pb.CMBroadcastChat{}
 	err := proto.Unmarshal(msg.GetData(), chat)
@@ -56,6 +59,7 @@ func (c *ChatMessage) OnCMBroadcastChat(role siface.IRole, msg *core.Message) {
 		fmt.Println("proto.Marshal err: ", err)
 	}
 
+	//通过发送的协议名封包
 	req, err := role.GetTheWorld().GetProto().Encode("SMBroadcastChat", reqData)
 	if err != nil {
 		fmt.Println("Encode err: ", err)
@@ -65,6 +69,7 @@ func (c *ChatMessage) OnCMBroadcastChat(role siface.IRole, msg *core.Message) {
 	world.Broadcast(req)
 
 	db := world.GetDB()
+	//存数据库IO操作放到异步协程池跑,防止单协程的业务处理协程阻塞
 	world.GetAsyncPool().AsyncRun(
 		func() {
 			_, err := db.Exec("insert into chat_msg (chat_name, chat_time, chat_data) values(?, ?, ?)", reqChat.Name, reqChat.Time, reqChat.Chatdata)

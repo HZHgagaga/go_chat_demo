@@ -8,6 +8,7 @@ import (
 
 type Task func()
 
+//单协程工作队列
 type WorkThread struct {
 	TaskQueue chan Task
 }
@@ -34,6 +35,7 @@ func (t *WorkThread) AddTask(task Task) {
 	t.TaskQueue <- task
 }
 
+//协程池，用于异步处理IO操作
 type AsyncThreadPool struct {
 	taskQueue []chan Task
 	threadNum int
@@ -66,6 +68,7 @@ func (pool *AsyncThreadPool) Start() {
 }
 
 func (pool *AsyncThreadPool) AsyncRun(task Task) {
+	//取随机数来负载均衡协程调度
 	r := pool.rand.Intn(pool.threadNum)
 	pool.taskQueue[r] <- task
 }

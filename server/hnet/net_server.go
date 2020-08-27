@@ -9,6 +9,7 @@ import (
 
 type MsgHandle = func(hiface.IConnection, hiface.IMessage)
 
+//服务器的抽象
 type Server struct {
 	Name       string
 	IP         string
@@ -28,6 +29,7 @@ func NewServer(name string, ip string, port string) hiface.IServer {
 	return s
 }
 
+//一系列socket函数调用
 func (s *Server) Start() {
 	fmt.Println(s.Name, "start", s.IP+":"+s.Port)
 	addr, err := net.ResolveTCPAddr("tcp4", s.IP+":"+s.Port)
@@ -53,6 +55,7 @@ func (s *Server) Start() {
 			panic("AcceptTCP err:" + err.Error())
 		}
 		fmt.Println("one user connect: ", conn.RemoteAddr().String())
+		//一个客户端创建一个Connection
 		c := NewConnection(connID, conn, s, proto)
 		c.Start()
 		connID++
@@ -68,6 +71,7 @@ func (s *Server) ServerInit(handle MsgHandle) {
 	fmt.Println("MsgHandle is registered")
 }
 
+//获取消息处理函数
 func (s *Server) GetMsgHandle() (MsgHandle, error) {
 	if s.MsgHandle == nil {
 		return nil, errors.New("MsgHandle is unregistered")

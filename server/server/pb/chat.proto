@@ -11,18 +11,22 @@ enum MSG {
     M_SMHistoryChat = 5;
 }
 
+//C->M创建角色
 message CMCreatePlayer {
     string name = 1;
 }
 
+//M->C创建角色的返回
 message SMCreatePlayer {
 }
 
+//广播的消息
 message CMBroadcastChat {
     string name = 1;
     string chatdata = 2;
 }
 
+//给各客户端的广播消息
 message SMBroadcastChat {
     uint64 id = 1;
     string time = 2;
@@ -30,9 +34,11 @@ message SMBroadcastChat {
     string chatdata = 4;
 }
 
+//请求历史聊天记录
 message CMHistoryChat {
 }
 
+//历史聊天记录的返回
 message SMHistoryChat {
     repeated SMBroadcastChat msg = 1;
 }

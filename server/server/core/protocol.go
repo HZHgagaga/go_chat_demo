@@ -7,6 +7,7 @@ import (
 	"hzhgagaga/server/pb"
 )
 
+//业务层消息抽象
 type Message struct {
 	ID   uint32
 	Data []byte
@@ -28,6 +29,7 @@ func (m *Message) SetData(data []byte) {
 	m.Data = data
 }
 
+//含有消息名称和ID的map
 type ServerProto struct {
 	NametoIDMap map[string]uint32
 }
@@ -49,6 +51,7 @@ func (p *ServerProto) AddNametoIDMap(name string, ID uint32) {
 	p.NametoIDMap[name] = ID
 }
 
+//通过消息名称封包
 func (p *ServerProto) Encode(name string, msg []byte) (hiface.IMessage, error) {
 	msgID, ok := p.NametoIDMap[name]
 	if !ok {

@@ -5,6 +5,7 @@ import (
 	"hzhgagaga/server/siface"
 )
 
+//玩家的抽象
 type Player struct {
 	theWorld siface.ITheWorld
 	Name     string
@@ -34,6 +35,7 @@ func (p *Player) GetTheWorld() siface.ITheWorld {
 	return p.theWorld
 }
 
+//发送数据，将传递到网络层的发送协程
 func (p *Player) SendMessage(msg hiface.IMessage) {
 	p.theWorld.Send(p.GetUid(), msg)
 }

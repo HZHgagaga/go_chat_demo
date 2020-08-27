@@ -12,6 +12,7 @@ import (
 type PlayerMessage struct {
 }
 
+//CMCreatePlayer协议会进入到这个函数进行业务处理
 func (p *PlayerMessage) OnCMCreatePlayer(role siface.IRole, msg *core.Message) {
 	theWorld := role.GetTheWorld()
 	cdata := &pb.CMCreatePlayer{}

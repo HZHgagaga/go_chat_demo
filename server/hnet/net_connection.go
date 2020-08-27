@@ -7,6 +7,7 @@ import (
 	"net"
 )
 
+//客户端连接的抽象
 type Connection struct {
 	Server   *Server
 	ConnID   uint32
@@ -31,6 +32,7 @@ func (c *Connection) GetConnID() uint32 {
 	return c.ConnID
 }
 
+//每个客户端一个写协程
 func (c *Connection) WriteLoop() {
 	go func() {
 		defer c.Stop()
@@ -44,6 +46,7 @@ func (c *Connection) WriteLoop() {
 	}()
 }
 
+//每个客户端一个读协程
 func (c *Connection) ReadLoop() {
 	go func() {
 		defer c.Stop()
@@ -68,6 +71,7 @@ func (c *Connection) ReadLoop() {
 				}
 				msg.SetData(dataBuf)
 			}
+			//解包出来的消息放入业务处理协程
 			c.Server.WorkThread.AddTask(
 				func() {
 					switch msg.GetID() {
@@ -98,6 +102,7 @@ func (c *Connection) Stop() {
 	c.Conn.Close()
 }
 
+//提供业务层发送数据
 func (c *Connection) SendMessage(msg hiface.IMessage) {
 	c.SendChan <- msg
 }

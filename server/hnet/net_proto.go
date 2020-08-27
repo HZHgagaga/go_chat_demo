@@ -7,11 +7,13 @@ import (
 	"hzhgagaga/hiface"
 )
 
+//消息包的头
 type MessageHead struct {
 	Id  uint32
 	Len uint32
 }
 
+//消息包的抽象
 type Message struct {
 	MessageHead
 	Data []byte
