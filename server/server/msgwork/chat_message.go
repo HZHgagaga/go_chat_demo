@@ -15,6 +15,10 @@ type ChatMessage struct {
 
 //CMHistoryChat协议的包将进入该函数进行业务处理
 func (c *ChatMessage) OnCMHistoryChat(role siface.IRole, msg *core.Message) {
+	if !role.IsStatus(siface.ONLINE) {
+		return
+	}
+
 	theWorld := role.GetTheWorld()
 	theWorld.GetAsyncPool().AsyncRun(
 		func() {
@@ -43,6 +47,10 @@ func (c *ChatMessage) OnCMHistoryChat(role siface.IRole, msg *core.Message) {
 
 //CMBroadcastChat协议的包进这里
 func (c *ChatMessage) OnCMBroadcastChat(role siface.IRole, msg *core.Message) {
+	if !role.IsStatus(siface.ONLINE) {
+		return
+	}
+
 	chat := &pb.CMBroadcastChat{}
 	err := proto.Unmarshal(msg.GetData(), chat)
 	if err != nil {
@@ -83,6 +91,10 @@ func (c *ChatMessage) OnCMBroadcastChat(role siface.IRole, msg *core.Message) {
 
 //私密聊天
 func (c *ChatMessage) OnCMPrivateChat(role siface.IRole, msg *core.Message) {
+	if !role.IsStatus(siface.ONLINE) {
+		return
+	}
+
 	chat := &pb.CMPrivateChat{}
 	err := proto.Unmarshal(msg.GetData(), chat)
 	if err != nil {

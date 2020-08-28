@@ -13,6 +13,7 @@ type ITheWorld interface {
 	GetAsyncPool() *hnet.AsyncThreadPool
 	GetRole(hiface.IConnection) (IRole, error)
 	GetRoleByName(string) (IRole, error)
+	AddRoleByName(role IRole)
 	GetAllRoles() map[string]IRole
 	GetProto() *core.ServerProto
 	GetDB() *sql.DB

@@ -90,6 +90,9 @@ func (w *TheWorld) CallProtocolFunc(id uint32, role siface.IRole, msg *core.Mess
 //添加角色
 func (w *TheWorld) AddRole(role siface.IRole) {
 	w.Roles[role.GetUid()] = role
+}
+
+func (w *TheWorld) AddRoleByName(role siface.IRole) {
 	w.RolesByName[role.GetName()] = role
 }
 
