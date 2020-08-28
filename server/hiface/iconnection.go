@@ -8,6 +8,7 @@ type IConnection interface {
 	ReadLoop()
 	Start()
 	GetTCPConn() *net.TCPConn
+	IsClose() bool
 	Stop()
 	SendMessage(msg IMessage)
 }

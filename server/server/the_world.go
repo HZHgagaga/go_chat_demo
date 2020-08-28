@@ -20,7 +20,7 @@ import (
 const (
 	DB_USER_NAME = "hzh"
 	DB_PASS_WORD = "hzh"
-	DB_HOST      = "172.16.29.167"
+	DB_HOST      = "172.16.30.189"
 	DB_PORT      = "3306"
 	DB_DATABASE  = "chat_server"
 	DB_CHARSET   = "utf8"
@@ -91,6 +91,19 @@ func (w *TheWorld) AddRole(role siface.IRole) {
 	w.Roles[role.GetUid()] = role
 }
 
+func (w *TheWorld) LeaveUser(conn hiface.IConnection) {
+	id := conn.GetConnID()
+	if _, ok := w.UsersConns[id]; ok {
+		delete(w.UsersConns, id)
+	}
+
+	if role, ok := w.Roles[id]; ok {
+		delete(w.Roles, id)
+		fmt.Println("Role:", role.GetName(), "leave the world")
+	}
+
+}
+
 //获取角色
 func (w *TheWorld) GetRole(conn hiface.IConnection) (siface.IRole, error) {
 	if role, ok := w.Roles[conn.GetConnID()]; ok {
@@ -117,14 +130,18 @@ func (w *TheWorld) GetDB() *sql.DB {
 //业务层的入口，网络层传来的消息处理函数
 func MsgHandle(conn hiface.IConnection, msg hiface.IMessage) {
 	theWorld := GetTheWorld()
-	msgID, message, err := theWorld.Proto.Decode(msg)
-	role, err := theWorld.GetRole(conn)
-	if err != nil {
-		theWorld.UsersConns[conn.GetConnID()] = conn
-		role = CreatePlayer(conn.GetConnID(), theWorld)
-	}
+	if !conn.IsClose() {
+		msgID, message, err := theWorld.Proto.Decode(msg)
+		role, err := theWorld.GetRole(conn)
+		if err != nil {
+			theWorld.UsersConns[conn.GetConnID()] = conn
+			role = CreatePlayer(conn.GetConnID(), theWorld)
+		}
 
-	theWorld.CallProtocolFunc(msgID, role, message)
+		theWorld.CallProtocolFunc(msgID, role, message)
+	} else {
+		theWorld.LeaveUser(conn)
+	}
 }
 
 //将消息发送至网络层的发送协程

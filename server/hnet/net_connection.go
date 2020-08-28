@@ -14,6 +14,7 @@ type Connection struct {
 	Conn     *net.TCPConn
 	proto    *Proto
 	SendChan chan hiface.IMessage
+	close    bool
 }
 
 func NewConnection(uid uint32, conn *net.TCPConn, server *Server, pro *Proto) hiface.IConnection {
@@ -26,6 +27,10 @@ func NewConnection(uid uint32, conn *net.TCPConn, server *Server, pro *Proto) hi
 	}
 
 	return c
+}
+
+func (c *Connection) IsClose() bool {
+	return c.close
 }
 
 func (c *Connection) GetConnID() uint32 {
@@ -100,6 +105,21 @@ func (c *Connection) GetTCPConn() *net.TCPConn {
 
 func (c *Connection) Stop() {
 	c.Conn.Close()
+	c.close = true
+	msg := &Message{}
+	c.Server.WorkThread.AddTask(
+		func() {
+			switch msg.GetID() {
+			default:
+				handle, err := c.Server.GetMsgHandle()
+				if err != nil {
+					fmt.Println("Get MsgHandle err: ", err)
+					return
+				}
+				handle(c, msg)
+			}
+		},
+	)
 }
 
 //提供业务层发送数据

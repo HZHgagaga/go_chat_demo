@@ -83,6 +83,7 @@ func (MSG) EnumDescriptor() ([]byte, []int) {
 	return file_chat_proto_rawDescGZIP(), []int{0}
 }
 
+//C->M创建角色
 type CMCreatePlayer struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -130,6 +131,7 @@ func (x *CMCreatePlayer) GetName() string {
 	return ""
 }
 
+//M->C创建角色的返回
 type SMCreatePlayer struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -168,6 +170,7 @@ func (*SMCreatePlayer) Descriptor() ([]byte, []int) {
 	return file_chat_proto_rawDescGZIP(), []int{1}
 }
 
+//广播的消息
 type CMBroadcastChat struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -223,6 +226,7 @@ func (x *CMBroadcastChat) GetChatdata() string {
 	return ""
 }
 
+//给各客户端的广播消息
 type SMBroadcastChat struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -294,6 +298,7 @@ func (x *SMBroadcastChat) GetChatdata() string {
 	return ""
 }
 
+//请求历史聊天记录
 type CMHistoryChat struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -332,6 +337,7 @@ func (*CMHistoryChat) Descriptor() ([]byte, []int) {
 	return file_chat_proto_rawDescGZIP(), []int{4}
 }
 
+//历史聊天记录的返回
 type SMHistoryChat struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
