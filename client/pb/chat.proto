@@ -3,21 +3,35 @@ syntax = "proto3";
 package pb;
 
 enum MSG {
-    M_CMCreatePlayer = 0;
-    M_SMCreatePlayer = 1;
-    M_CMBroadcastChat = 2;
-    M_SMBroadcastChat = 3;
-    M_CMHistoryChat = 4;
-    M_SMHistoryChat = 5;
+    M_CMEnterWorld = 0;
+    M_SMEnterWorld = 1;
+    M_CMCreatePlayer = 2;
+    M_SMCreatePlayer = 3;
+    M_CMBroadcastChat = 4;
+    M_SMBroadcastChat = 5;
+    M_CMHistoryChat = 6;
+    M_SMHistoryChat = 7;
+    M_CMAllPlayers = 8;
+    M_SMAllPlayers = 9;
+    M_CMPrivateChat = 10;
+    M_SMPrivateChat = 11;
 }
 
-//C->M创建角色
+message CMEnterWorld {
+}
+
+message SMEnterWorld {
+}
+
+//创建角色
 message CMCreatePlayer {
     string name = 1;
 }
 
-//M->C创建角色的返回
+//创建角色的返回
 message SMCreatePlayer {
+    bool ok = 1;
+    string msg = 2;
 }
 
 //广播的消息
@@ -41,4 +55,24 @@ message CMHistoryChat {
 //历史聊天记录的返回
 message SMHistoryChat {
     repeated SMBroadcastChat msg = 1;
+}
+
+//玩家列表请求
+message CMAllPlayers {
+}
+
+message SMAllPlayers {
+    repeated string names = 1;       
+}
+
+//私密聊天
+message CMPrivateChat {
+    string name = 1;
+    string chat = 2;
+}
+
+message SMPrivateChat {
+    string time = 1;
+    string name = 2;
+    string chatdata = 3;
 }

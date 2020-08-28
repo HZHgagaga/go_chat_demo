@@ -45,7 +45,10 @@ func (c *Connection) WriteLoop() {
 			select {
 			case msg := <-c.SendChan:
 				data := c.proto.Encode(msg)
-				c.Conn.Write(data)
+				if _, err := c.Conn.Write(data); err != nil {
+					fmt.Println(c.ConnID, " write err: ", err)
+					return
+				}
 			}
 		}
 	}()

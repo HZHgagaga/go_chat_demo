@@ -65,12 +65,12 @@ func (c *ChatMessage) OnCMBroadcastChat(role siface.IRole, msg *core.Message) {
 		fmt.Println("Encode err: ", err)
 	}
 
-	world := role.GetTheWorld()
-	world.Broadcast(req)
+	theWorld := role.GetTheWorld()
+	theWorld.Broadcast(req)
 
-	db := world.GetDB()
+	db := theWorld.GetDB()
 	//存数据库IO操作放到异步协程池跑,防止单协程的业务处理协程阻塞
-	world.GetAsyncPool().AsyncRun(
+	theWorld.GetAsyncPool().AsyncRun(
 		func() {
 			_, err := db.Exec("insert into chat_msg (chat_name, chat_time, chat_data) values(?, ?, ?)", reqChat.Name, reqChat.Time, reqChat.Chatdata)
 			if err != nil {
@@ -79,4 +79,35 @@ func (c *ChatMessage) OnCMBroadcastChat(role siface.IRole, msg *core.Message) {
 			}
 		},
 	)
+}
+
+//私密聊天
+func (c *ChatMessage) OnCMPrivateChat(role siface.IRole, msg *core.Message) {
+	chat := &pb.CMPrivateChat{}
+	err := proto.Unmarshal(msg.GetData(), chat)
+	if err != nil {
+		fmt.Println("proto.Unmarshal err: ", err)
+	}
+
+	reqChat := &pb.SMPrivateChat{}
+	reqChat.Time = time.Now().Format("2006-01-02 15:04:05")
+	reqChat.Name = role.GetName()
+	reqChat.Chatdata = chat.GetChat()
+	reqData, err := proto.Marshal(reqChat)
+	if err != nil {
+		fmt.Println("proto.Marshal err: ", err)
+	}
+
+	//通过发送的协议名封包
+	req, err := role.GetTheWorld().GetProto().Encode("SMPrivateChat", reqData)
+	if err != nil {
+		fmt.Println("Encode err: ", err)
+	}
+
+	theWorld := role.GetTheWorld()
+	desPlr, err := theWorld.GetRoleByName(chat.GetName())
+	if err != nil {
+		return
+	}
+	desPlr.SendMessage(req)
 }

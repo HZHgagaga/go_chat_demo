@@ -20,7 +20,7 @@ import (
 const (
 	DB_USER_NAME = "hzh"
 	DB_PASS_WORD = "hzh"
-	DB_HOST      = "172.16.30.189"
+	DB_HOST      = "172.16.28.56"
 	DB_PORT      = "3306"
 	DB_DATABASE  = "chat_server"
 	DB_CHARSET   = "utf8"
@@ -28,7 +28,8 @@ const (
 
 //业务世界的抽象
 type TheWorld struct {
-	Roles            map[uint32]siface.IRole       //所有角色
+	Roles            map[uint32]siface.IRole //所有角色
+	RolesByName      map[string]siface.IRole
 	UsersConns       map[uint32]hiface.IConnection //该世界的所有连接
 	MessageStructMap []interface{}                 //协议处理结构体数组
 	HandleMap        map[uint32]reflect.Value      //协议处理方法集合
@@ -89,6 +90,7 @@ func (w *TheWorld) CallProtocolFunc(id uint32, role siface.IRole, msg *core.Mess
 //添加角色
 func (w *TheWorld) AddRole(role siface.IRole) {
 	w.Roles[role.GetUid()] = role
+	w.RolesByName[role.GetName()] = role
 }
 
 func (w *TheWorld) LeaveUser(conn hiface.IConnection) {
@@ -99,9 +101,9 @@ func (w *TheWorld) LeaveUser(conn hiface.IConnection) {
 
 	if role, ok := w.Roles[id]; ok {
 		delete(w.Roles, id)
+		delete(w.RolesByName, role.GetName())
 		fmt.Println("Role:", role.GetName(), "leave the world")
 	}
-
 }
 
 //获取角色
@@ -110,6 +112,17 @@ func (w *TheWorld) GetRole(conn hiface.IConnection) (siface.IRole, error) {
 		return role, nil
 	}
 	return nil, errors.New("Role nil, connID:" + strconv.Itoa(int(conn.GetConnID())))
+}
+
+func (w *TheWorld) GetRoleByName(name string) (siface.IRole, error) {
+	if role, ok := w.RolesByName[name]; ok {
+		return role, nil
+	}
+	return nil, errors.New("Role nil, name:" + name)
+}
+
+func (w *TheWorld) GetAllRoles() map[string]siface.IRole {
+	return w.RolesByName
 }
 
 //获取异步池对象
@@ -132,6 +145,7 @@ func MsgHandle(conn hiface.IConnection, msg hiface.IMessage) {
 	theWorld := GetTheWorld()
 	if !conn.IsClose() {
 		msgID, message, err := theWorld.Proto.Decode(msg)
+		fmt.Println("Recv msg:", pb.MSG_name[int32(msgID)])
 		role, err := theWorld.GetRole(conn)
 		if err != nil {
 			theWorld.UsersConns[conn.GetConnID()] = conn
@@ -164,11 +178,12 @@ func (w *TheWorld) Broadcast(msg hiface.IMessage) {
 
 func init() {
 	theWorld = &TheWorld{
-		Roles:      make(map[uint32]siface.IRole),
-		UsersConns: make(map[uint32]hiface.IConnection),
-		HandleMap:  make(map[uint32]reflect.Value),
-		AsyncPool:  hnet.NewAsyncThreadPool(runtime.NumCPU()),
-		Proto:      core.CreateServerProto(),
+		Roles:       make(map[uint32]siface.IRole),
+		RolesByName: make(map[string]siface.IRole),
+		UsersConns:  make(map[uint32]hiface.IConnection),
+		HandleMap:   make(map[uint32]reflect.Value),
+		AsyncPool:   hnet.NewAsyncThreadPool(runtime.NumCPU()),
+		Proto:       core.CreateServerProto(),
 	}
 
 	//添加需要的协议处理结构体

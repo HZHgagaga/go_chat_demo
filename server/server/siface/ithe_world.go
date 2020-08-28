@@ -11,6 +11,9 @@ type ITheWorld interface {
 	Send(uid uint32, msg hiface.IMessage)
 	AddRole(role IRole)
 	GetAsyncPool() *hnet.AsyncThreadPool
+	GetRole(hiface.IConnection) (IRole, error)
+	GetRoleByName(string) (IRole, error)
+	GetAllRoles() map[string]IRole
 	GetProto() *core.ServerProto
 	GetDB() *sql.DB
 	Broadcast(hiface.IMessage)
