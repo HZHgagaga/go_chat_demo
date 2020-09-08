@@ -5,8 +5,9 @@ go 1.14
 require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.4.2
-	github.com/google/gops v0.3.11 // indirect
-	github.com/shirou/gopsutil v2.20.7+incompatible // indirect
-	golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6 // indirect
+	github.com/jeanphorn/log4go v0.0.0-20190526082429-7dbb8deb9468
+	github.com/skoo87/log4go v0.0.0-20160718120903-4be49e76f196
+	github.com/spf13/viper v1.7.1
+	github.com/toolkits/file v0.0.0-20160325033739-a5b3c5147e07 // indirect
 	google.golang.org/protobuf v1.25.0
 )

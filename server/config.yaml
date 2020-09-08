@@ -1,0 +1,10 @@
+server:
+    ip: 0.0.0.0
+    port: 16666
+mysql:
+    username: hzh
+    password: hzh
+    host: 172.16.28.56
+    port: 3306
+    database: chat_server
+    chatset: utf8

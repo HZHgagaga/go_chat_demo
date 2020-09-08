@@ -1,12 +1,13 @@
 package msgwork
 
 import (
-	"fmt"
+	"hzhgagaga/hnet"
 	"hzhgagaga/server/core"
 	"hzhgagaga/server/pb"
 	"hzhgagaga/server/siface"
 	"time"
 
+	"github.com/jeanphorn/log4go"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -20,7 +21,7 @@ func (c *ChatMessage) OnCMHistoryChat(role siface.IRole, msg *core.Message) {
 	}
 
 	theWorld := role.GetTheWorld()
-	theWorld.GetAsyncPool().AsyncRun(
+	hnet.AsyncPool.AsyncRun(
 		func() {
 			rows, _ := theWorld.GetDB().Query("select chat_id, chat_name, chat_time, chat_data from chat_msg order by chat_id desc LIMIT 50")
 			chatArr := &pb.SMHistoryChat{}
@@ -32,13 +33,13 @@ func (c *ChatMessage) OnCMHistoryChat(role siface.IRole, msg *core.Message) {
 
 			chatArrData, err := proto.Marshal(chatArr)
 			if err != nil {
-				fmt.Println("proto.Marshal err:", err)
+				log4go.Debug("proto.Marshal err:", err)
 			}
 
 			//通过发送的协议名封包
 			req, err := theWorld.GetProto().Encode("SMHistoryChat", chatArrData)
 			if err != nil {
-				fmt.Println("Encode err:", err)
+				log4go.Debug("Encode err:", err)
 			}
 			role.SendMessage(req)
 		},
@@ -54,23 +55,23 @@ func (c *ChatMessage) OnCMBroadcastChat(role siface.IRole, msg *core.Message) {
 	chat := &pb.CMBroadcastChat{}
 	err := proto.Unmarshal(msg.GetData(), chat)
 	if err != nil {
-		fmt.Println("proto.Unmarshal err: ", err)
+		log4go.Debug("proto.Unmarshal err: ", err)
 	}
 
 	reqChat := &pb.SMBroadcastChat{}
 	reqChat.Time = time.Now().Format("2006-01-02 15:04:05")
 	reqChat.Name = role.GetName()
 	reqChat.Chatdata = chat.GetChatdata()
-	fmt.Println(reqChat.Time, reqChat.Name, reqChat.Chatdata)
+	log4go.Debug("Chat", reqChat.Time, reqChat.Name, reqChat.Chatdata)
 	reqData, err := proto.Marshal(reqChat)
 	if err != nil {
-		fmt.Println("proto.Marshal err: ", err)
+		log4go.Debug("proto.Marshal err: ", err)
 	}
 
 	//通过发送的协议名封包
 	req, err := role.GetTheWorld().GetProto().Encode("SMBroadcastChat", reqData)
 	if err != nil {
-		fmt.Println("Encode err: ", err)
+		log4go.Debug("Encode err: ", err)
 	}
 
 	theWorld := role.GetTheWorld()
@@ -78,11 +79,11 @@ func (c *ChatMessage) OnCMBroadcastChat(role siface.IRole, msg *core.Message) {
 
 	db := theWorld.GetDB()
 	//存数据库IO操作放到异步协程池跑,防止单协程的业务处理协程阻塞
-	theWorld.GetAsyncPool().AsyncRun(
+	hnet.AsyncPool.AsyncRun(
 		func() {
 			_, err := db.Exec("insert into chat_msg (chat_name, chat_time, chat_data) values(?, ?, ?)", reqChat.Name, reqChat.Time, reqChat.Chatdata)
 			if err != nil {
-				fmt.Println("insert db err:", err)
+				log4go.Debug("insert db err:", err)
 				panic("DB err:" + err.Error())
 			}
 		},
@@ -98,7 +99,7 @@ func (c *ChatMessage) OnCMPrivateChat(role siface.IRole, msg *core.Message) {
 	chat := &pb.CMPrivateChat{}
 	err := proto.Unmarshal(msg.GetData(), chat)
 	if err != nil {
-		fmt.Println("proto.Unmarshal err: ", err)
+		log4go.Debug("proto.Unmarshal err: ", err)
 	}
 
 	reqChat := &pb.SMPrivateChat{}
@@ -106,14 +107,15 @@ func (c *ChatMessage) OnCMPrivateChat(role siface.IRole, msg *core.Message) {
 	reqChat.Name = role.GetName()
 	reqChat.Chatdata = chat.GetChat()
 	reqData, err := proto.Marshal(reqChat)
+	log4go.Debug("OnCMPrivateChat:%+v", reqChat)
 	if err != nil {
-		fmt.Println("proto.Marshal err: ", err)
+		log4go.Debug("proto.Marshal err: ", err)
 	}
 
 	//通过发送的协议名封包
 	req, err := role.GetTheWorld().GetProto().Encode("SMPrivateChat", reqData)
 	if err != nil {
-		fmt.Println("Encode err: ", err)
+		log4go.Debug("Encode err: ", err)
 	}
 
 	theWorld := role.GetTheWorld()

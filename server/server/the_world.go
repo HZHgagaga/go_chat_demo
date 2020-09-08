@@ -10,32 +10,23 @@ import (
 	"hzhgagaga/server/msgwork"
 	"hzhgagaga/server/pb"
 	"hzhgagaga/server/siface"
+	"log"
 	"reflect"
-	"runtime"
 	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
-)
-
-const (
-	DB_USER_NAME = "hzh"
-	DB_PASS_WORD = "hzh"
-	DB_HOST      = "172.16.28.56"
-	DB_PORT      = "3306"
-	DB_DATABASE  = "chat_server"
-	DB_CHARSET   = "utf8"
+	"github.com/jeanphorn/log4go"
+	"github.com/spf13/viper"
 )
 
 //业务世界的抽象
 type TheWorld struct {
 	Roles            map[uint32]siface.IRole //所有角色
 	RolesByName      map[string]siface.IRole
-	UsersConns       map[uint32]hiface.IConnection //该世界的所有连接
-	MessageStructMap []interface{}                 //协议处理结构体数组
-	HandleMap        map[uint32]reflect.Value      //协议处理方法集合
-	AsyncPool        *hnet.AsyncThreadPool         //异步协程任务池
-	Proto            *core.ServerProto             //解封包对象
-	DB               *sql.DB                       //数据库对象
+	MessageStructMap []interface{}            //协议处理结构体数组
+	HandleMap        map[uint32]reflect.Value //协议处理方法集合
+	Proto            *core.ServerProto        //解封包对象
+	DB               *sql.DB                  //数据库对象
 }
 
 var theWorld *TheWorld
@@ -47,7 +38,7 @@ func GetTheWorld() *TheWorld {
 //协议处理对象添加
 func (w *TheWorld) AddMsgStruct(ms interface{}) {
 	w.MessageStructMap = append(w.MessageStructMap, ms)
-	fmt.Println("Add Msg Struct: ", reflect.ValueOf(ms).Type())
+	log4go.Debug("Add Msg Struct: ", reflect.ValueOf(ms).Type())
 }
 
 //调用HandleMap中存储的方法时用到
@@ -69,7 +60,7 @@ func (w *TheWorld) InitProtocol() {
 			protocolName = "M_" + protocolName
 			if ID, ok := pb.MSG_value[protocolName]; ok {
 				w.HandleMap[uint32(ID)] = v.Method(i)
-				fmt.Println("Init protocol func :", t.Method(i).Name)
+				log4go.Debug("Init protocol func :", t.Method(i).Name)
 			}
 		}
 	}
@@ -83,7 +74,7 @@ func (w *TheWorld) CallProtocolFunc(id uint32, role siface.IRole, msg *core.Mess
 	if handle, ok := w.HandleMap[id]; ok {
 		handle.Call(getValues(role, msg))
 	} else {
-		fmt.Println("CallProtocolFunc err nil, msgID: ", id)
+		log4go.Error("CallProtocolFunc err nil, msgID: ", id)
 	}
 }
 
@@ -98,14 +89,12 @@ func (w *TheWorld) AddRoleByName(role siface.IRole) {
 
 func (w *TheWorld) LeaveUser(conn hiface.IConnection) {
 	id := conn.GetConnID()
-	if _, ok := w.UsersConns[id]; ok {
-		delete(w.UsersConns, id)
-	}
 
 	if role, ok := w.Roles[id]; ok {
 		delete(w.Roles, id)
-		delete(w.RolesByName, role.GetName())
-		fmt.Println("Role:", role.GetName(), "leave the world")
+		if role.IsStatus(siface.ONLINE) {
+			delete(w.RolesByName, role.GetName())
+		}
 	}
 }
 
@@ -128,11 +117,6 @@ func (w *TheWorld) GetAllRoles() map[string]siface.IRole {
 	return w.RolesByName
 }
 
-//获取异步池对象
-func (w *TheWorld) GetAsyncPool() *hnet.AsyncThreadPool {
-	return w.AsyncPool
-}
-
 //获取解封包对象
 func (w *TheWorld) GetProto() *core.ServerProto {
 	return w.Proto
@@ -148,11 +132,11 @@ func MsgHandle(conn hiface.IConnection, msg hiface.IMessage) {
 	theWorld := GetTheWorld()
 	if !conn.IsClose() {
 		msgID, message, err := theWorld.Proto.Decode(msg)
-		fmt.Println("Recv msg:", pb.MSG_name[int32(msgID)])
+		//log4go.Debug("Recv msg:", pb.MSG_name[int32(msgID)])
 		role, err := theWorld.GetRole(conn)
 		if err != nil {
-			theWorld.UsersConns[conn.GetConnID()] = conn
-			role = CreatePlayer(conn.GetConnID(), theWorld)
+			role = CreatePlayer(conn, theWorld)
+			log4go.Info("[TheWorld] Now role num:%d", len(theWorld.Roles))
 		}
 
 		theWorld.CallProtocolFunc(msgID, role, message)
@@ -161,31 +145,21 @@ func MsgHandle(conn hiface.IConnection, msg hiface.IMessage) {
 	}
 }
 
-//将消息发送至网络层的发送协程
-func (w *TheWorld) Send(uid uint32, msg hiface.IMessage) {
-	conn, ok := w.UsersConns[uid]
-	if !ok {
-		fmt.Println("SendMessage err: player's connection is nil")
-		return
-	}
-	conn.SendMessage(msg)
-}
-
 //广播发送
 func (w *TheWorld) Broadcast(msg hiface.IMessage) {
-	fmt.Println("----Broadcast----")
 	for _, role := range theWorld.Roles {
-		w.Send(role.GetUid(), msg)
+		role.GetConn().SendMessage(msg)
 	}
 }
 
 func init() {
+	//日志初始化
+	log4go.AddFilter("file", log4go.DEBUG, log4go.NewFileLogWriter("server.log", true, true))
+
 	theWorld = &TheWorld{
 		Roles:       make(map[uint32]siface.IRole),
 		RolesByName: make(map[string]siface.IRole),
-		UsersConns:  make(map[uint32]hiface.IConnection),
 		HandleMap:   make(map[uint32]reflect.Value),
-		AsyncPool:   hnet.NewAsyncThreadPool(runtime.NumCPU()),
 		Proto:       core.CreateServerProto(),
 	}
 
@@ -196,10 +170,24 @@ func init() {
 
 	theWorld.InitProtocol()
 	//异步任务协程池启动
-	theWorld.AsyncPool.Start()
+	hnet.AsyncPool.Start()
 
+	//配置读取
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")    // 设置配置文件和可执行二进制文件在用一个目录
+	err := viper.ReadInConfig() // 根据以上配置读取加载配置文件
+	if err != nil {
+		log4go.Error("viper.ReadInConfig err:", err)
+		log.Fatal(err)
+	}
+
+	theWorld.DB = dbInit()
+}
+
+func dbInit() *sql.DB {
 	//DB初始化
-	dbConfig := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s", DB_USER_NAME, DB_PASS_WORD, DB_HOST, DB_PORT, DB_DATABASE, DB_CHARSET)
+	dbConfig := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s", viper.GetString(`mysql.username`), viper.GetString(`mysql.password`), viper.GetString(`mysql.host`), viper.GetString(`mysql.port`), viper.GetString(`mysql.database`), viper.GetString(`mysql.chatset`))
+	log4go.Debug(dbConfig)
 	db, err := sql.Open("mysql", dbConfig)
 	if err != nil {
 		panic("DB err:" + err.Error())
@@ -209,6 +197,9 @@ func init() {
 		panic("DB connect err:" + err.Error())
 	}
 
-	fmt.Println("DB connected")
-	theWorld.DB = db
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(5)
+	log4go.Debug("DB connected")
+
+	return db
 }

@@ -1,25 +1,31 @@
 package server
 
 import (
-	"fmt"
+	"errors"
 	"hzhgagaga/hiface"
 	"hzhgagaga/server/siface"
 )
 
 //玩家的抽象
 type Player struct {
+	Conn     hiface.IConnection
 	theWorld siface.ITheWorld
 	Name     string
 	Uid      uint32
 	Status   int8
 }
 
-func CreatePlayer(uid uint32, world siface.ITheWorld) *Player {
+func CreatePlayer(conn hiface.IConnection, world siface.ITheWorld) *Player {
 	return &Player{
+		Conn:     conn,
 		theWorld: world,
-		Uid:      uid,
+		Uid:      conn.GetConnID(),
 		Status:   -1,
 	}
+}
+
+func (p *Player) GetConn() hiface.IConnection {
+	return p.Conn
 }
 
 func (p *Player) GetName() string {
@@ -35,7 +41,6 @@ func (p *Player) SetName(name string) {
 }
 
 func (p *Player) IsStatus(value int8) bool {
-	fmt.Println(p.Status, value)
 	return p.Status == value
 }
 
@@ -48,6 +53,11 @@ func (p *Player) GetTheWorld() siface.ITheWorld {
 }
 
 //发送数据，将传递到网络层的发送协程
-func (p *Player) SendMessage(msg hiface.IMessage) {
-	p.theWorld.Send(p.GetUid(), msg)
+func (p *Player) SendMessage(msg hiface.IMessage) error {
+	if p.Conn.IsClose() {
+		return errors.New("Conn closed")
+	}
+
+	p.Conn.SendMessage(msg)
+	return nil
 }

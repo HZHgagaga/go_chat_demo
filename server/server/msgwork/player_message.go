@@ -1,12 +1,13 @@
 package msgwork
 
 import (
-	"fmt"
 	"hzhgagaga/server/core"
 	"hzhgagaga/server/pb"
 	"hzhgagaga/server/siface"
 
 	"google.golang.org/protobuf/proto"
+
+	"github.com/jeanphorn/log4go"
 )
 
 type PlayerMessage struct {
@@ -14,18 +15,18 @@ type PlayerMessage struct {
 
 //进入世界的协议
 func (p *PlayerMessage) OnCMEnterWorld(role siface.IRole, msg *core.Message) {
-	fmt.Println("One user enter the world")
+	log4go.Debug("One user enter the world")
 	theWorld := role.GetTheWorld()
 	eData := &pb.SMEnterWorld{}
 	okData, err := proto.Marshal(eData)
 	if err != nil {
-		fmt.Println("proto.Marshal err:", err)
+		log4go.Debug("proto.Marshal err:", err)
 		return
 	}
 
 	req, err := theWorld.GetProto().Encode("SMEnterWorld", okData)
 	if err != nil {
-		fmt.Println("Encode err:", err)
+		log4go.Debug("Encode err:", err)
 		return
 	}
 	role.SendMessage(req)
@@ -43,7 +44,7 @@ func (p *PlayerMessage) OnCMCreatePlayer(role siface.IRole, msg *core.Message) {
 	cdata := &pb.CMCreatePlayer{}
 	err := proto.Unmarshal(msg.GetData(), cdata)
 	if err != nil {
-		fmt.Println("proto.Unmarshal err:", err)
+		log4go.Debug("proto.Unmarshal err:", err)
 		return
 	}
 
@@ -54,7 +55,7 @@ func (p *PlayerMessage) OnCMCreatePlayer(role siface.IRole, msg *core.Message) {
 		okPb.Msg = "名字已经存在"
 	} else {
 		role.SetName(cdata.GetName())
-		fmt.Println("----------TheWorld---------AddPlayer Name:", cdata.GetName())
+		log4go.Debug("----------TheWorld---------AddPlayer Name:", cdata.GetName())
 		okPb.Ok = true
 		role.SetStatus(siface.ONLINE)
 		theWorld.AddRoleByName(role)
@@ -62,13 +63,13 @@ func (p *PlayerMessage) OnCMCreatePlayer(role siface.IRole, msg *core.Message) {
 
 	okData, err := proto.Marshal(okPb)
 	if err != nil {
-		fmt.Println("proto.Marshal err:", err)
+		log4go.Debug("proto.Marshal err:", err)
 		return
 	}
 
 	req, err := theWorld.GetProto().Encode("SMCreatePlayer", okData)
 	if err != nil {
-		fmt.Println("Encode err:", err)
+		log4go.Debug("Encode err:", err)
 		return
 	}
 	role.SendMessage(req)
@@ -89,13 +90,13 @@ func (p *PlayerMessage) OnCMAllPlayers(role siface.IRole, msg *core.Message) {
 
 	Data, err := proto.Marshal(pData)
 	if err != nil {
-		fmt.Println("proto.Marshal err:", err)
+		log4go.Debug("proto.Marshal err:", err)
 		return
 	}
 
 	req, err := theWorld.GetProto().Encode("SMAllPlayers", Data)
 	if err != nil {
-		fmt.Println("Encode err:", err)
+		log4go.Debug("Encode err:", err)
 		return
 	}
 	role.SendMessage(req)

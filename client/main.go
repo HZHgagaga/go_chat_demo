@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jeanphorn/log4go"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -48,12 +49,12 @@ func Decode(buf []byte) (*Message, error) {
 	bbuf := bytes.NewBuffer(buf)
 	m := &Message{}
 	if err := binary.Read(bbuf, binary.LittleEndian, &m.Id); err != nil {
-		fmt.Println("binary.Read Id err: ", err)
+		log4go.Debug("binary.Read Id err: ", err)
 		return nil, err
 	}
 
 	if err := binary.Read(bbuf, binary.LittleEndian, &m.Len); err != nil {
-		fmt.Println("binary.Read Len err: ", err)
+		log4go.Debug("binary.Read Len err: ", err)
 		return nil, err
 	}
 
@@ -63,15 +64,15 @@ func Decode(buf []byte) (*Message, error) {
 func Encode(m *Message) []byte {
 	bbuf := bytes.NewBuffer([]byte{})
 	if err := binary.Write(bbuf, binary.LittleEndian, m.Id); err != nil {
-		fmt.Println("binary.Read id err: ", err)
+		log4go.Debug("binary.Read id err: ", err)
 	}
 
 	if err := binary.Write(bbuf, binary.LittleEndian, m.Len); err != nil {
-		fmt.Println("binary.Read len err: ", err)
+		log4go.Debug("binary.Read len err: ", err)
 	}
 
 	if err := binary.Write(bbuf, binary.LittleEndian, m.Data); err != nil {
-		fmt.Println("binary.Read data err: ", err)
+		log4go.Debug("binary.Read data err: ", err)
 	}
 
 	return bbuf.Bytes()
@@ -85,7 +86,7 @@ func (s msgs) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
 func CreatePlayer(conn net.Conn) {
 	buf := make([]byte, 256)
-	fmt.Print("Please input your name:")
+	log4go.Debug("Please input your name:")
 
 	fmt.Scanln(&buf)
 	msg := &Message{}
@@ -133,7 +134,7 @@ func ReadLoop(conn net.Conn) {
 		buf := make([]byte, 8)
 		if _, err := io.ReadFull(conn, buf); err != nil {
 			if err == io.EOF {
-				fmt.Println("服务器已关闭")
+				log4go.Debug("服务器已关闭")
 				return
 			}
 			panic("Recv err:" + err.Error())
@@ -141,14 +142,14 @@ func ReadLoop(conn net.Conn) {
 
 		msg, err := Decode(buf)
 		if err != nil {
-			fmt.Println("Decode err: ", err)
+			log4go.Debug("Decode err: ", err)
 			return
 		}
 
 		dataBuf := make([]byte, msg.GetLen())
 		if _, err := io.ReadFull(conn, dataBuf); err != nil {
 			if err == io.EOF {
-				fmt.Println("服务器已关闭")
+				log4go.Debug("服务器已关闭")
 				return
 			}
 			panic("io.ReadFull err:" + err.Error())
@@ -156,66 +157,67 @@ func ReadLoop(conn net.Conn) {
 
 		switch int32(msg.GetID()) {
 		case pb.MSG_value["M_SMEnterWorld"]:
-			fmt.Println("Enter World")
+			log4go.Debug("Enter World")
 			CreatePlayer(conn)
 		case pb.MSG_value["M_SMCreatePlayer"]:
 			data := &pb.SMCreatePlayer{}
 			if err := proto.Unmarshal(dataBuf, data); err != nil {
-				fmt.Println("proto.Unmarshal err: ", err)
+				log4go.Debug("proto.Unmarshal err: ", err)
 				CreatePlayer(conn)
 				break
 			}
 
 			if data.GetOk() {
-				fmt.Println("CreatePlayer OK!")
+				log4go.Debug("CreatePlayer OK!")
 				GetHistoryChat(conn)
 			} else {
-				fmt.Println(data.GetMsg())
+				log4go.Debug(data.GetMsg())
 				CreatePlayer(conn)
 			}
 		case pb.MSG_value["M_SMBroadcastChat"]:
 			chat := &pb.SMBroadcastChat{}
 			if err := proto.Unmarshal(dataBuf, chat); err != nil {
-				fmt.Println("proto.Unmarshal err: ", err)
+				log4go.Debug("proto.Unmarshal err: ", err)
 				break
 			}
-			fmt.Println(chat.GetTime(), chat.GetName(), "say:", chat.GetChatdata())
+			log4go.Debug(chat.GetTime(), chat.GetName(), "say:", chat.GetChatdata())
 		case pb.MSG_value["M_SMHistoryChat"]:
 			chat := &pb.SMHistoryChat{}
 			if err := proto.Unmarshal(dataBuf, chat); err != nil {
-				fmt.Println("proto.Unmarshal err: ", err)
+				log4go.Debug("proto.Unmarshal err: ", err)
 				break
 			}
 
 			sort.Stable(msgs(chat.Msg))
-			fmt.Println("[======================history=======================]")
+			log4go.Debug("[======================history=======================]")
 			for _, msg := range chat.GetMsg() {
-				fmt.Println(msg.GetTime(), msg.GetName(), "say:", msg.GetChatdata())
+				log4go.Debug(msg.GetTime(), msg.GetName(), "say:", msg.GetChatdata())
 			}
-			fmt.Println("[========================end=========================]")
-			fmt.Println("输入 show@ 可查看所有在线的用户名")
-			fmt.Println("输入 private@[用户名]:[msg] 可进行私密聊天")
+			log4go.Debug("[========================end=========================]")
+			log4go.Debug("输入 show@ 可查看所有在线的用户名")
+			log4go.Debug("输入 private@[用户名]:[msg] 可进行私密聊天")
 		case pb.MSG_value["M_SMAllPlayers"]:
 			players := &pb.SMAllPlayers{}
 			if err := proto.Unmarshal(dataBuf, players); err != nil {
-				fmt.Println("proto.Unmarshal err: ", err)
+				log4go.Debug("proto.Unmarshal err: ", err)
 				break
 			}
 
-			fmt.Println("------All player------")
+			log4go.Debug("------All player------")
 			for _, name := range players.GetNames() {
-				fmt.Println(name)
+				log4go.Debug(name)
 			}
-			fmt.Println("---------end----------")
-			fmt.Println("输入 show@ 可查看所有在线的用户名")
-			fmt.Println("输入 private@[用户名]:[msg] 可进行私密聊天")
+			log4go.Debug("---------end----------")
+			log4go.Debug("总共:", len(players.GetNames()), "人")
+			log4go.Debug("输入 show@ 可查看所有在线的用户名")
+			log4go.Debug("输入 private@[用户名]:[msg] 可进行私密聊天")
 		case pb.MSG_value["M_SMPrivateChat"]:
 			chat := &pb.SMPrivateChat{}
 			if err := proto.Unmarshal(dataBuf, chat); err != nil {
-				fmt.Println("proto.Unmarshal err: ", err)
+				log4go.Debug("proto.Unmarshal err: ", err)
 				break
 			}
-			fmt.Println("(私密聊天)", chat.GetTime(), chat.GetName(), "say:", chat.GetChatdata())
+			log4go.Debug("(私密聊天)", chat.GetTime(), chat.GetName(), "say:", chat.GetChatdata())
 		}
 	}
 }
@@ -232,7 +234,7 @@ func WriteLoop(conn net.Conn) {
 			data := &pb.CMAllPlayers{}
 			req, err := proto.Marshal(data)
 			if err != nil {
-				fmt.Println("proto.Marshal err: ", err)
+				log4go.Debug("proto.Marshal err: ", err)
 				return
 			}
 
@@ -241,7 +243,7 @@ func WriteLoop(conn net.Conn) {
 			sendMsg := Encode(msg)
 			_, err = conn.Write(sendMsg)
 			if err != nil {
-				fmt.Println("Write error", err)
+				log4go.Debug("Write error", err)
 			}
 		case "private":
 			msgs := strings.Split(para[1], ":")
@@ -252,7 +254,7 @@ func WriteLoop(conn net.Conn) {
 			chat.Chat = msgs[1]
 			data, err := proto.Marshal(chat)
 			if err != nil {
-				fmt.Println("proto.Marshal err: ", err)
+				log4go.Debug("proto.Marshal err: ", err)
 				return
 			}
 
@@ -261,9 +263,9 @@ func WriteLoop(conn net.Conn) {
 			sendMsg := Encode(msg)
 			_, err = conn.Write(sendMsg)
 			if err != nil {
-				fmt.Println("Write error", err)
+				log4go.Debug("Write error", err)
 			}
-			fmt.Println("OK")
+			log4go.Debug("OK")
 		default:
 			msg := &Message{}
 			msg.Id = uint32(pb.MSG_value["M_CMBroadcastChat"])
@@ -272,7 +274,7 @@ func WriteLoop(conn net.Conn) {
 			chat.Chatdata = string(buf)
 			data, err := proto.Marshal(chat)
 			if err != nil {
-				fmt.Println("proto.Marshal err: ", err)
+				log4go.Debug("proto.Marshal err: ", err)
 				return
 			}
 
@@ -281,7 +283,7 @@ func WriteLoop(conn net.Conn) {
 			sendMsg := Encode(msg)
 			_, err = conn.Write(sendMsg)
 			if err != nil {
-				fmt.Println("Write error", err)
+				log4go.Debug("Write error", err)
 			}
 		}
 	}
@@ -293,7 +295,7 @@ func EnterWorld(conn net.Conn) {
 	data := &pb.CMEnterWorld{}
 	req, err := proto.Marshal(data)
 	if err != nil {
-		fmt.Println("proto.Marshal err: ", err)
+		log4go.Debug("proto.Marshal err: ", err)
 		return
 	}
 
@@ -302,18 +304,18 @@ func EnterWorld(conn net.Conn) {
 	sendMsg := Encode(msg)
 	_, err = conn.Write(sendMsg)
 	if err != nil {
-		fmt.Println("Write error", err)
+		log4go.Debug("Write error", err)
 	}
 }
 
 func main() {
-	fmt.Println("Client start test...")
+	log4go.Debug("Client start test...")
 	conn, err := net.Dial("tcp4", "127.0.0.1:16666")
 	if err != nil {
-		fmt.Println("Dial error: ", err)
+		log4go.Debug("Dial error: ", err)
 		return
 	} else {
-		fmt.Println("Connect server succeed")
+		log4go.Debug("Connect server succeed")
 	}
 
 	go ReadLoop(conn)
